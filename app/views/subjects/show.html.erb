@@ -1,0 +1,12 @@
+<p id="notice"><%= notice %></p>
+
+<p>
+  <strong>Name:</strong>
+  <%= @subject.name %>
+</p>
+<p>
+  <strong>Instructor email:</strong>
+  <%= @subject.user.email %>
+</p>
+<%= link_to 'Edit', edit_group_subject_path(@subject) %> |
+<%= link_to 'Back', group_subjects_path %>

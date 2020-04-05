@@ -14,3 +14,6 @@
  *= require_self
  *= require bootstrap/scss/bootstrap
  */
+.bg-pp {
+	background-color: #543996 !important;
+}

@@ -1,0 +1,6 @@
+<h1>Editing Lesson</h1>
+
+<%= render 'form', lesson: @lesson %>
+
+<%= link_to 'Show', [:group, :subject, @lesson] %> |
+<%= link_to 'Back', group_subject_lessons_path %>
