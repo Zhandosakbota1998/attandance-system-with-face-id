@@ -1,3 +1,56 @@
 // Place all the styles related to the Lessons controller here.
 // They will automatically be included in application.css.
 // You can use Sass (SCSS) here: https://sass-lang.com/
+
+
+.center-content {
+	position: absolute;
+	right: 0px;
+}
+
+.side-by-side {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.side-by-side >* {
+  margin: 0 5px;
+}
+
+.bold {
+  font-weight: bold;
+}
+
+.margin-sm {
+  margin: 5px;
+}
+
+.margin {
+  margin: 20px;
+}
+
+.button-sm {
+  padding: 0 10px !important;
+}
+
+.pad-sides-sm {
+  padding: 0 8px !important;
+}
+
+#overlay, .overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+#facesContainer canvas {
+  margin: 10px;
+}
+
+input[type="file"]::-webkit-file-upload-button {
+    background: #26a69a;
+    border: 1px solid gray;
+    cursor: pointer;
+    color: #fff;
+    border-radius: .2em;
+}

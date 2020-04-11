@@ -11,6 +11,8 @@ class SubjectsController < ApplicationController
   # GET /subjects/1
   # GET /subjects/1.json
   def show
+    @lessons = Lesson.where(subject: params[:id])
+    @group = Group.find(params[:group_id])
   end
 
   # GET /subjects/new

@@ -3,7 +3,9 @@ Rails.application.routes.draw do
   resources :groups do
   	resources :students
   	resources :subjects do 
-  		resources :lessons
+  		resources :lessons do
+        get :live
+      end
   	end
   end
 

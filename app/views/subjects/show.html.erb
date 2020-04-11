@@ -8,5 +8,33 @@
   <strong>Instructor email:</strong>
   <%= @subject.user.email %>
 </p>
+
+<%= link_to 'New Lesson', new_group_subject_lesson_path(@group, @subject) %>
+
+<table class="table">
+  <thead>
+    <tr>
+      <th scope="col">#</th>
+      <th scope="col">First</th>
+      <th scope="col">Last</th>
+      <th scope="col">Handle</th>
+      <th scope="col"></th>
+    </tr>
+  </thead>
+  <tbody>
+  	<% @lessons.each do |lesson| %>
+	    <tr>
+	      <th scope="row"><%= lesson.id %></th>
+	      <td><%= lesson.name %></td>
+	      <td><%= lesson.start_time %></td>
+	      <td><%= lesson.end_time %></td>
+	      <td><%= link_to 'Show', [@group, @subject, lesson] %></td>
+	    </tr>
+	    
+	<% end %>
+  </tbody>
+</table>
+
+	
 <%= link_to 'Edit', edit_group_subject_path(@subject) %> |
 <%= link_to 'Back', group_subjects_path %>

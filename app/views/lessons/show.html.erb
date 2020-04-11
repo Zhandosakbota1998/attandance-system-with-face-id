@@ -15,5 +15,5 @@
   <%= @lesson.end_time %>
 </p>
 
-<%= link_to 'Edit', edit_lesson_path(@lesson) %> |
-<%= link_to 'Back', lessons_path %>
+<%= link_to 'Edit', [:edit, @group, @subject, @lesson] %> |
+<%= link_to 'Back', group_subject_path(@group, @subject) %>
