@@ -1,15 +1,14 @@
 <p id="notice"><%= notice %></p>
-
-<p>
-  <strong>Name:</strong>
-  <%= @subject.name %>
-</p>
+<h1>Group: <%= link_to @group.name, @group %></h1>
+<h1>Subject <%= @subject.name %></h1>
 <p>
   <strong>Instructor email:</strong>
   <%= @subject.user.email %>
 </p>
 
-<%= link_to 'New Lesson', new_group_subject_lesson_path(@group, @subject) %>
+<%= link_to ' + New Lesson', new_group_subject_lesson_path(@group, @subject), class: 'btn btn-info' %>
+<%= link_to 'Edit Lesson', edit_group_subject_path(@subject), class: "btn btn-warning" %>
+<br>
 
 <table class="table">
   <thead>
@@ -38,5 +37,4 @@
 </table>
 
 	
-<%= link_to 'Edit', edit_group_subject_path(@subject) %> |
-<%= link_to 'Back', group_subjects_path %>
+

@@ -54,10 +54,17 @@ class GroupsController < ApplicationController
   # DELETE /groups/1
   # DELETE /groups/1.json
   def destroy
-    @group.destroy
-    respond_to do |format|
-      format.html { redirect_to groups_url, notice: 'Group was successfully destroyed.' }
-      format.json { head :no_content }
+    begin
+      @group.destroy
+      respond_to do |format|
+        format.html { redirect_to groups_url, notice: 'Group was successfully destroyed.' }
+        format.json { head :no_content }
+      end
+    rescue Exception => e
+      respond_to do |format|
+        format.html { redirect_to groups_url, notice: 'Group cannot be deleted when there are students and subjects in this group' }
+        format.json { render json: @group.errors, status: :unprocessable_entity }
+      end
     end
   end
 

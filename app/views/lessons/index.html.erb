@@ -2,7 +2,9 @@
 
 <h1>Lessons</h1>
 
-<table>
+<%= link_to 'New Lesson', new_group_subject_lesson_path, class: "btn btn-info" %>
+
+<table class="table">
   <thead>
     <tr>
       <th>Name</th>
@@ -27,5 +29,3 @@
 </table>
 
 <br>
-
-<%= link_to 'New Lesson', new_group_subject_lesson_path %>

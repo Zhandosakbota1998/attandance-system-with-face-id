@@ -17,6 +17,7 @@
   </div>
 
   <div class="actions">
-    <%= form.submit %>
+    <%= form.submit :Save, class: "btn btn-primary" %>
+    <%= link_to 'Cancel', [:group, :subjects], class: "btn btn-light" %>
   </div>
 <% end %>

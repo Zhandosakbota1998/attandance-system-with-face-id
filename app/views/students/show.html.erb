@@ -1,20 +1,17 @@
 <p id="notice"><%= notice %></p>
+<%= link_to '< Back', group_students_path, class: "btn btn-light" %>
 
+  <h1>Full name: <%= @student.full_name %></h1>
+<%= link_to 'Edit', edit_group_student_path(@group, @student), class: "btn btn-warning" %>
 <p>
-  <strong>Full name:</strong>
-  <%= @student.full_name %>
-</p>
-<p>
-  <strong>Images:</strong>
   <% @student.images.each do |image| %>
   	<div>
 	    <%= image_tag image, height: 150 %>
-	    <%= link_to 'Remove', delete_image_group_student_path(@group, @student, image),
+	    <%= link_to '<- Remove', delete_image_group_student_path(@group, @student, image),
 	                method: :delete,
-	                data: { confirm: 'Are you sure?' } %>
+	                data: { confirm: 'Are you sure?' }, class: 'btn btn-outline-danger' %>
     </div>
   <% end %>
 </p>
 
-<%= link_to 'Edit', edit_group_student_path(@group, @student) %> |
-<%= link_to 'Back', group_students_path %>
+
