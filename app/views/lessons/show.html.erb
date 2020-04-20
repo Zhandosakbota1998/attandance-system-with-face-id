@@ -1,13 +1,8 @@
 <p id="notice"><%= notice %></p>
 
 <p>
-  <strong>Name:</strong>
+  <strong>Lesson Name:</strong>
   <%= @lesson.name %>
-</p>
-
-<p>
-  <strong>Students:</strong>
-  <%= @lesson.students.pluck(:full_name) %>
 </p>
 
 <p>
@@ -19,6 +14,28 @@
   <strong>End time:</strong>
   <%= @lesson.end_time %>
 </p>
+
+
+<table class="table">
+  <thead>
+    <tr>
+      <th scope="col">Id</th>
+      <th scope="col">Full Name</th>
+      <th scope="col">Attendance</th>
+    </tr>
+  </thead>
+  <tbody>
+  	<% @group.students.each do |student| %>
+	    <tr>
+	      <th scope="row"><%= student.id %></th>
+	      <td><%= student.full_name %></td>
+	      <td><%= @lesson.students.include?(student) ? 
+	      "<b style='color: #28a745'>was</b>".html_safe : 
+	      "<b style='color: #dc3545'>wasn\'t</b>".html_safe %></td>
+	    </tr>
+	<% end %>
+  </tbody>
+</table>
 
 <%= link_to 'Edit', [:edit, @group, @subject, @lesson] %> |
 <%= link_to 'Back', group_subject_path(@group, @subject) %>
