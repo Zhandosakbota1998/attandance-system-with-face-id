@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2020_04_19_164558) do
+ActiveRecord::Schema.define(version: 2020_04_20_092637) do
 
   create_table "active_storage_attachments", force: :cascade do |t|
     t.string "name", null: false
@@ -49,14 +49,19 @@ ActiveRecord::Schema.define(version: 2020_04_19_164558) do
     t.index ["subject_id"], name: "index_lessons_on_subject_id"
   end
 
+  create_table "lessons_students", id: false, force: :cascade do |t|
+    t.integer "student_id", null: false
+    t.integer "lesson_id", null: false
+    t.index ["lesson_id", "student_id"], name: "index_lessons_students_on_lesson_id_and_student_id"
+    t.index ["student_id", "lesson_id"], name: "index_lessons_students_on_student_id_and_lesson_id"
+  end
+
   create_table "students", force: :cascade do |t|
     t.string "full_name"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.integer "group_id"
-    t.integer "lesson_id"
     t.index ["group_id"], name: "index_students_on_group_id"
-    t.index ["lesson_id"], name: "index_students_on_lesson_id"
   end
 
   create_table "subjects", force: :cascade do |t|
@@ -84,7 +89,6 @@ ActiveRecord::Schema.define(version: 2020_04_19_164558) do
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "lessons", "subjects"
   add_foreign_key "students", "groups"
-  add_foreign_key "students", "lessons"
   add_foreign_key "subjects", "groups"
   add_foreign_key "subjects", "users"
 end
