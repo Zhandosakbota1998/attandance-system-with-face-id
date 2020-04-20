@@ -1,275 +1,167 @@
 <p id="notice"><%= notice %></p>
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/js/materialize.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/js/materialize.min.js"></script>
 <div data-controller="lessons">
-  <h1 data-target="lessons.output"></h1>
 </div>
-
 <h1>Group: <%= link_to @group.name, @group %>, Subject: <%= link_to @subject.name, [@group, @subject] %></h1>
+<div class="spinner-grow text-info" style="width: 3rem; height: 3rem; margin-left: 48%; padding-left: -25px; margin-top: 100px" role="status" id="loader">
+  <span class="sr-only">Loading...</span>
+</div>
+<div class="row">
+<div style="position: relative" class="col">
+  <video onloadedmetadata="onPlay(this)" id="inputVideo" autoplay muted playsinline></video>
+  <canvas id="overlay" width="720" height="405" />
+</div>
+<div class="col" style="height: 405px; overflow: hidden;" id="log">
+</div>
+</div>
+<%= form_with(model: [@group, @subject, @lesson], local: true, id: "live-form") do |form| %>
+  <%= form.submit "Stop", class: "btn btn-outline-danger btn-lg btn-block" %>
+<% end %>
 
-  <div class="center-content page-container">
+<script>
 
-    <div class="progress" id="loader">
-      <div class="indeterminate"></div>
-    </div>
-    <div style="position: relative" class="margin">
-      <video onloadedmetadata="onPlay(this)" id="inputVideo" autoplay muted playsinline></video>
-      <canvas id="overlay" />
-    </div>
+var students = JSON.parse('<%= raw @group.students.select{|x| x.images.length > 0}.map{|x| [x, x.images.map{|i| url_for(i)}] }.to_json %>')
+// console.log(imgUrl)
+console.log(students)
 
-    <div class="row side-by-side">
+function getFaceImageUri(className, idx) {
+    return `${className}/${className}${idx}.png`
+}
 
-      <!-- face_detector_selection_control -->
-      <div id="face_detector_selection_control" class="row input-field" style="margin-right: 20px;">
-        <select id="selectFaceDetector">
-          <option value="ssd_mobilenetv1">SSD Mobilenet V1</option>
-          <option value="tiny_face_detector">Tiny Face Detector</option>
-        </select>
-        <label>Select Face Detector</label>
-      </div>
-      <!-- face_detector_selection_control -->
+async function getFaceDescriptor(imagePath) {    
+  //create canvas
+  var canvas = document.createElement('canvas');
 
-      <!-- fps_meter -->
-      <div id="fps_meter" class="row side-by-side">
-        <div>
-          <label for="time">Time:</label>
-          <input disabled value="-" id="time" type="text" class="bold">
-          <label for="fps">Estimated Fps:</label>
-          <input disabled value="-" id="fps" type="text" class="bold">
-        </div>
-      </div>
-      <!-- fps_meter -->
+  canvas.id = "CursorLayer";
+  canvas.width = 1224;
+  canvas.height = 768;
+  canvas.style.display = "none"
 
-    </div>
+  var body = document.getElementsByTagName("body")[0];
+  body.appendChild(canvas);
+  const ctx = canvas.getContext('2d');
+  const img = await faceapi.fetchImage(imagePath)
+  ctx.drawImage(img, 0, 0)
 
+  //face detection
+  const useTinyModel = true;
+  const faceDescriptor = await faceapi
+  .detectSingleFace(canvas)
+  .withFaceLandmarks(useTinyModel)
+  .withFaceDescriptor();
 
-    <!-- ssd_mobilenetv1_controls -->
-    <span id="ssd_mobilenetv1_controls">
-      <div class="row side-by-side">
-        <div class="row">
-          <label for="minConfidence">Min Confidence:</label>
-          <input disabled value="0.5" id="minConfidence" type="text" class="bold">
-        </div>
-        <button
-          class="waves-effect waves-light btn"
-          onclick="onDecreaseMinConfidence()"
-        >
-          <i class="material-icons left">-</i>
-        </button>
-        <button
-          class="waves-effect waves-light btn"
-          onclick="onIncreaseMinConfidence()"
-        >
-          <i class="material-icons left">+</i>
-        </button>
-      </div>
-    </span>
-    <!-- ssd_mobilenetv1_controls -->
+  $("#" + canvas.id).remove();
+  return faceDescriptor.descriptor;
+}
 
-    <!-- tiny_face_detector_controls -->
-    <span id="tiny_face_detector_controls">
-      <div class="row side-by-side">
-        <div class="row input-field" style="margin-right: 20px;">
-          <select id="inputSize">
-            <option value="" disabled selected>Input Size:</option>
-            <option value="128">128 x 128</option>
-            <option value="160">160 x 160</option>
-            <option value="224">224 x 224</option>
-            <option value="320">320 x 320</option>
-            <option value="416">416 x 416</option>
-            <option value="512">512 x 512</option>
-            <option value="608">608 x 608</option>
-          </select>
-          <label>Input Size</label>
-        </div>
-        <div class="row">
-          <label for="scoreThreshold">Score Threshold:</label>
-          <input disabled value="0.5" id="scoreThreshold" type="text" class="bold">
-        </div>
-        <button
-          class="waves-effect waves-light btn"
-          onclick="onDecreaseScoreThreshold()"
-        >
-          <i class="material-icons left">-</i>
-        </button>
-        <button
-          class="waves-effect waves-light btn"
-          onclick="onIncreaseScoreThreshold()"
-        >
-          <i class="material-icons left">+</i>
-        </button>
-      </div>
-    </span>
-    <!-- tiny_face_detector_controls -->
+// fetch first image of each class and compute their descriptors
+async function createBbtFaceMatcher(numImagesForTraining = 3) {
+    const maxAvailableImagesPerClass = 6
+    numImagesForTraining = Math.min(numImagesForTraining, maxAvailableImagesPerClass)
+    const labeledFaceDescriptors = await Promise.all(students.map(
+        async student => {
+            console.log(student);
+            const descriptors = []
+            for (let i = 0; i < Math.min(numImagesForTraining, student[1].length); i++) {
+                // if ()
+                console.log(i);
+                descriptors.push(await getFaceDescriptor(student[1][i]))
 
+                // const img = await faceapi.fetchImage(student[1][i])
+                // console.log(img);
+                // console.log(student[1][i])
+                // descriptors.push(await faceapi.computeFaceDescriptor(img))
+            }
+            console.log(student[0].full_name)
+            return new faceapi.LabeledFaceDescriptors(student[0].id + ":" + student[0].full_name, descriptors)
+        }
+    ))
+    console.log(labeledFaceDescriptors);
+    return new faceapi.FaceMatcher(labeledFaceDescriptors)
+}
 
-  <script>
-
-  	const SSD_MOBILENETV1 = 'ssd_mobilenetv1'
+const SSD_MOBILENETV1 = 'ssd_mobilenetv1'
 const TINY_FACE_DETECTOR = 'tiny_face_detector'
-
-
-let selectedFaceDetector = SSD_MOBILENETV1
-
 // ssd_mobilenetv1 options
 let minConfidence = 0.5
-
 // tiny_face_detector options
 let inputSize = 512
 let scoreThreshold = 0.5
 
-function getFaceDetectorOptions() {
-  return selectedFaceDetector === SSD_MOBILENETV1
-    ? new faceapi.SsdMobilenetv1Options({ minConfidence })
-    : new faceapi.TinyFaceDetectorOptions({ inputSize, scoreThreshold })
-}
 
-function onIncreaseMinConfidence() {
-  minConfidence = Math.min(faceapi.utils.round(minConfidence + 0.1), 1.0)
-  $('#minConfidence').val(minConfidence)
-  updateResults()
-}
+let forwardTimes = [];
+let existStudents = {};
+console.log(existStudents);
 
-function onDecreaseMinConfidence() {
-  minConfidence = Math.max(faceapi.utils.round(minConfidence - 0.1), 0.1)
-  $('#minConfidence').val(minConfidence)
-  updateResults()
-}
-
-function onInputSizeChanged(e) {
-  changeInputSize(e.target.value)
-  updateResults()
-}
-
-function changeInputSize(size) {
-  inputSize = parseInt(size)
-
-  const inputSizeSelect = $('#inputSize')
-  inputSizeSelect.val(inputSize)
-  inputSizeSelect.material_select()
-}
-
-function onIncreaseScoreThreshold() {
-  scoreThreshold = Math.min(faceapi.utils.round(scoreThreshold + 0.1), 1.0)
-  $('#scoreThreshold').val(scoreThreshold)
-  updateResults()
-}
-
-function onDecreaseScoreThreshold() {
-  scoreThreshold = Math.max(faceapi.utils.round(scoreThreshold - 0.1), 0.1)
-  $('#scoreThreshold').val(scoreThreshold)
-  updateResults()
-}
-
-function onIncreaseMinFaceSize() {
-  minFaceSize = Math.min(faceapi.utils.round(minFaceSize + 20), 300)
-  $('#minFaceSize').val(minFaceSize)
-}
-
-function onDecreaseMinFaceSize() {
-  minFaceSize = Math.max(faceapi.utils.round(minFaceSize - 20), 50)
-  $('#minFaceSize').val(minFaceSize)
-}
-
-function getCurrentFaceDetectionNet() {
-  if (selectedFaceDetector === SSD_MOBILENETV1) {
-    return faceapi.nets.ssdMobilenetv1
-  }
-  if (selectedFaceDetector === TINY_FACE_DETECTOR) {
-    return faceapi.nets.tinyFaceDetector
-  }
-}
-
-function isFaceDetectionModelLoaded() {
-  return !!getCurrentFaceDetectionNet().params
-}
-
-async function changeFaceDetector(detector) {
-  ['#ssd_mobilenetv1_controls', '#tiny_face_detector_controls']
-    .forEach(id => $(id).hide())
-
-  selectedFaceDetector = detector
-  const faceDetectorSelect = $('#selectFaceDetector')
-  faceDetectorSelect.val(detector)
-  faceDetectorSelect.material_select()
-
-  $('#loader').show()
-  if (!isFaceDetectionModelLoaded()) {
-    await getCurrentFaceDetectionNet().load('/')
-  }
-
-  $(`#${detector}_controls`).show()
-  $('#loader').hide()
-}
-
-async function onSelectedFaceDetectorChanged(e) {
-  selectedFaceDetector = e.target.value
-
-  await changeFaceDetector(e.target.value)
-  updateResults()
-}
-
-function initFaceDetectionControls() {
-  const faceDetectorSelect = $('#selectFaceDetector')
-  faceDetectorSelect.val(selectedFaceDetector)
-  faceDetectorSelect.on('change', onSelectedFaceDetectorChanged)
-  faceDetectorSelect.material_select()
-
-  const inputSizeSelect = $('#inputSize')
-  inputSizeSelect.val(inputSize)
-  inputSizeSelect.on('change', onInputSizeChanged)
-  inputSizeSelect.material_select()
-}
-
-    let forwardTimes = []
-
-    function updateTimeStats(timeInMs) {
-      forwardTimes = [timeInMs].concat(forwardTimes).slice(0, 30)
-      const avgTimeInMs = forwardTimes.reduce((total, t) => total + t) / forwardTimes.length
-      $('#time').val(`${Math.round(avgTimeInMs)} ms`)
-      $('#fps').val(`${faceapi.utils.round(1000 / avgTimeInMs)}`)
-    }
-
-    async function onPlay() {
-      const videoEl = $('#inputVideo').get(0)
-
-      if(videoEl.paused || videoEl.ended || !isFaceDetectionModelLoaded())
+async function onPlay() {
+    const videoEl = $('#inputVideo').get(0)
+    if (videoEl.paused || videoEl.ended)
         return setTimeout(() => onPlay())
+    // const options = getFaceDetectorOptions()
+    const results = await faceapi.detectAllFaces(videoEl)
+        .withFaceLandmarks()
+        .withFaceExpressions()
+        .withFaceDescriptors()
 
-
-      const options = getFaceDetectorOptions()
-
-      const ts = Date.now()
-
-      const result = await faceapi.detectSingleFace(videoEl, options)
-
-      updateTimeStats(Date.now() - ts)
-
-      if (result) {
+    if (results) {
         const canvas = $('#overlay').get(0)
-        const dims = faceapi.matchDimensions(canvas, videoEl, true)
-        faceapi.draw.drawDetections(canvas, faceapi.resizeResults(result, dims))
-      }
-
-      setTimeout(() => onPlay())
+        faceapi.matchDimensions(canvas, videoEl)
+        const dims = { width: 720, height: 405 }
+        // faceapi.draw.drawDetections(canvas, faceapi.resizeResults(result, dims))
+        // resize detection and landmarks in case displayed image is smaller than
+        // original size
+        const resizedResults = faceapi.resizeResults(results, dims)
+        resizedResults.forEach(({
+            detection,
+            descriptor
+        }) => {
+            const label = faceMatcher.findBestMatch(descriptor).toString();
+            if (faceMatcher.findBestMatch(descriptor).label.split(":").length > 1) {
+              var studentId = faceMatcher.findBestMatch(descriptor).label.split(":")[0];
+              if (!existStudents[studentId]) {
+                existStudents[studentId] = true;
+                $("#log").prepend('<div class="alert alert-success" role="alert">' + faceMatcher.findBestMatch(descriptor).label.split(":")[1] + ' is here!</div>');
+                $("#live-form").append('<input value="' + studentId + '" type="hidden" name="lesson[student_ids][]" id="lesson_student_ids">');
+              }
+            }
+            const options = {
+                label
+            }
+            const drawBox = new faceapi.draw.DrawBox(detection.box, options)
+            drawBox.draw(canvas)
+        })
     }
+    setTimeout(() => onPlay())
+}
+async function run() {
+    // load face detection model
+    // load face detection, face landmark model and face recognition models
+    await faceapi.loadTinyFaceDetectorModel('/');
+    await faceapi.loadSsdMobilenetv1Model('/')
+    await faceapi.loadFaceLandmarkModel('/')
+    await faceapi.loadFaceRecognitionModel('/')
+    await faceapi.loadFaceLandmarkTinyModel('/')
+    await faceapi.loadFaceExpressionModel('/')
 
-    async function run() {
-      // load face detection model
-      await changeFaceDetector(TINY_FACE_DETECTOR)
-      changeInputSize(128)
+    // initialize face matcher with 1 reference descriptor per bbt character
+    faceMatcher = await createBbtFaceMatcher(6)
+    $('#loader').hide();
+    // try to access users webcam and stream the images
+    // to the video element
+    const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
 
-      // try to access users webcam and stream the images
-      // to the video element
-      const stream = await navigator.mediaDevices.getUserMedia({ video: {} })
-      const videoEl = $('#inputVideo').get(0)
-      videoEl.srcObject = stream
-    }
+        }
+    })
+    const videoEl = $('#inputVideo').get(0)
+    videoEl.width = 720;
+    videoEl.height = 405;
+    videoEl.srcObject = stream
+}
 
-    function updateResults() {}
-
-    $(document).ready(function() {
-      initFaceDetectionControls()
-      run()
-    });
-  </script>
+function updateResults() {}
+$(document).ready(function() {
+    $('#loader').show();
+    run()
+});
+</script>

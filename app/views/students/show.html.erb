@@ -4,6 +4,17 @@
   <strong>Full name:</strong>
   <%= @student.full_name %>
 </p>
+<p>
+  <strong>Images:</strong>
+  <% @student.images.each do |image| %>
+  	<div>
+	    <%= image_tag image, height: 150 %>
+	    <%= link_to 'Remove', delete_image_group_student_path(@group, @student, image),
+	                method: :delete,
+	                data: { confirm: 'Are you sure?' } %>
+    </div>
+  <% end %>
+</p>
 
-<%= link_to 'Edit', edit_group_student_path(@student) %> |
+<%= link_to 'Edit', edit_group_student_path(@group, @student) %> |
 <%= link_to 'Back', group_students_path %>

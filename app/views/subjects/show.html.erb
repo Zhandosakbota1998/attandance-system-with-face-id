@@ -15,9 +15,10 @@
   <thead>
     <tr>
       <th scope="col">#</th>
-      <th scope="col">First</th>
-      <th scope="col">Last</th>
-      <th scope="col">Handle</th>
+      <th scope="col">Full Name</th>
+      <th scope="col">Start Time</th>
+      <th scope="col">End Time</th>
+      <th scope="col">Attendance</th>
       <th scope="col"></th>
     </tr>
   </thead>
@@ -28,6 +29,7 @@
 	      <td><%= lesson.name %></td>
 	      <td><%= lesson.start_time %></td>
 	      <td><%= lesson.end_time %></td>
+        <td><%= lesson.students.count * 100 / @group.students.count %>%</td>
 	      <td><%= link_to 'Show', [@group, @subject, lesson] %></td>
 	    </tr>
 	    

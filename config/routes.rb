@@ -1,7 +1,11 @@
 Rails.application.routes.draw do
   
   resources :groups do
-  	resources :students
+  	resources :students do
+      member do
+        delete '/delete_image/:image_id', to: "students#delete_image", as: :delete_image
+      end
+    end
   	resources :subjects do 
   		resources :lessons do
         get :live

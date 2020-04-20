@@ -1,4 +1,47 @@
-<%= form_with(model: [:group, student], local: true) do |form| %>
+<div class="row">
+    <div class="col">
+      <video autoplay></video>
+      <div style="display: none;">
+        <canvas id='grabFrameCanvas'></canvas>
+        <button id='grabFrameButton' disabled>Grab Frame</button>
+      </div>
+    </div>
+    <div class="col">
+      <table>
+        <tr>
+          <td>
+            
+            <canvas id='takePhotoCanvas1' class="takedPhoto"></canvas>
+            <button class="takePhotoBtn btn btn-info" id='takePhotoButton1' data-num="1" disabled>Take Photo #1</button>
+          </td>
+          <td>
+            <canvas id='takePhotoCanvas2' class="takedPhoto"></canvas>
+            <button class="takePhotoBtn btn btn-info" id='takePhotoButton2' data-num="2" disabled>Take Photo #2</button>
+          </td>
+          <td>
+            <canvas id='takePhotoCanvas3' class="takedPhoto"></canvas>
+            <button class="takePhotoBtn btn btn-info" id='takePhotoButton3' data-num="3" disabled>Take Photo #3</button>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <canvas id='takePhotoCanvas4' class="takedPhoto"></canvas>
+            <button class="takePhotoBtn btn btn-info" id='takePhotoButton4' data-num="4" disabled>Take Photo #4</button>
+          </td>
+          <td>
+            <canvas id='takePhotoCanvas5' class="takedPhoto"></canvas>
+            <button class="takePhotoBtn btn btn-info" id='takePhotoButton5' data-num="5" disabled>Take Photo #5</button>
+          </td>
+          <td>
+            <canvas id='takePhotoCanvas6' class="takedPhoto"></canvas>
+            <button class="takePhotoBtn btn btn-info" id='takePhotoButton6' data-num="6" disabled>Take Photo #6</button>
+          </td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+<%= form_with(model: [@group, student], local: true) do |form| %>
   <% if student.errors.any? %>
     <div id="error_explanation">
       <h2><%= pluralize(student.errors.count, "error") %> prohibited this student from being saved:</h2>
@@ -11,12 +54,129 @@
     </div>
   <% end %>
 
-  <div class="field">
+  <div class="form-group">
     <%= form.label :full_name %>
-    <%= form.text_field :full_name %>
+    <%= form.text_field :full_name, class: "form-control", placeholder: :student_full_name %>
   </div>
+
+
+  <div class="field">
+    <%#= form.label :images %>
+    <%#= form.file_field :images, multiple: true %>
+  </div>
+
+  <div>
+    <% form.object.images.each do |image| %>
+      <%= form.hidden_field :images, value: image.signed_id, multiple: true %>
+      <%= image_tag image, height: 150 %>
+    <% end %>
+  </div>
+
+  
   
   <div class="actions">
-    <%= form.submit %>
+    <%= form.submit :Save, class: "btn btn-primary"%>
   </div>
 <% end %>
+
+<script>
+  $(document).ready(function() {
+
+    function isCanvasBlank(canvas) {
+      return !canvas.getContext('2d')
+        .getImageData(0, 0, canvas.width, canvas.height).data
+        .some(channel => channel !== 0);
+    }
+
+    $("form").on("submit", async function(e) {
+      e.preventDefault();
+      var $form = $(this);
+      console.log($form);
+      var data = new FormData(this);
+      options = $form.serializeArray()
+      for (var option in options) {
+        data[option] = options[option];
+      }
+      for (var i = 1; i <= 6; i++) {
+        var canvas = document.getElementById("takePhotoCanvas" + i);
+
+        if (isCanvasBlank(canvas)) break;
+
+        const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png', 1));
+        console.log(blob);
+        const file = new File([blob], "studentImg" + i + ".png", {
+            type: 'image/png'
+        });
+
+        console.log(file);
+        data.append("student[images][]", file);
+      }
+      
+      console.log(data);
+      // return false;
+      $.ajax({
+          type: $form.attr('method'),
+          enctype: 'multipart/form-data',
+          url: $form.attr('action'),
+          data: data,
+          processData: false,
+          contentType: false,
+          cache: false
+        }).done(function() {
+          console.log('success');
+        }).fail(function() {
+          console.log('fail');
+        });
+      return false;
+    });
+
+
+    var imageCapture;
+
+    $('.takePhotoBtn').on('click', function() {
+      $this = $(this)
+      console.log($this);
+      console.log($this.data("num") + 1);
+      imageCapture.grabFrame()
+      .then(imageBitmap => {
+        const canvas = document.querySelector('#grabFrameCanvas');
+        drawCanvas(canvas, imageBitmap);
+      })
+      .catch(error => ChromeSamples.log(error));
+
+      imageCapture.takePhoto()
+      .then(blob => createImageBitmap(blob))
+      .then(imageBitmap => {
+        const canvas = document.querySelector('#takePhotoCanvas' + $this.data("num"));
+        drawCanvas(canvas, imageBitmap);
+        $("#takePhotoButton" + ($this.data("num") + 1)).attr("disabled", false);
+      })
+      .catch(error => ChromeSamples.log(error));
+    });
+
+    /* Utils */
+
+    function drawCanvas(canvas, img) {
+      canvas.width = 1080;
+      let ratio  = canvas.width / img.width;
+      canvas.height = img.height * ratio;
+      canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+      canvas.getContext('2d').drawImage(img, 0, 0, img.width, img.height,
+          0, 0, canvas.width, canvas.height);
+    }
+
+    $('video').on('play', function() {
+      $("#takePhotoButton1").attr("disabled", false);
+    });
+
+    navigator.mediaDevices.getUserMedia({video: true})
+      .then(mediaStream => {
+        document.querySelector('video').width = 1080;
+        document.querySelector('video').srcObject = mediaStream;
+
+        const track = mediaStream.getVideoTracks()[0];
+        imageCapture = new ImageCapture(track);
+      })
+      .catch(error => ChromeSamples.log(error));
+  })
+</script>

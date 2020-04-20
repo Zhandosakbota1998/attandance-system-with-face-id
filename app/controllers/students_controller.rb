@@ -1,5 +1,5 @@
 class StudentsController < ApplicationController
-  before_action :set_student, only: [:show, :edit, :update, :destroy]
+  before_action :set_student, only: [:show, :edit, :update, :destroy, :delete_image]
 
   # GET /students
   # GET /students.json
@@ -11,15 +11,18 @@ class StudentsController < ApplicationController
   # GET /students/1
   # GET /students/1.json
   def show
+    @group = Group.find(params[:group_id])
   end
 
   # GET /students/new
   def new
     @student = Student.new(group_id: params[:group_id])
+    @group = Group.find(params[:group_id])
   end
 
   # GET /students/1/edit
   def edit
+    @group = Group.find(params[:group_id])
   end
 
   # POST /students
@@ -41,10 +44,11 @@ class StudentsController < ApplicationController
   # PATCH/PUT /students/1
   # PATCH/PUT /students/1.json
   def update
+    @group = Group.find(params[:group_id])
     respond_to do |format|
       if @student.update(student_params)
-        format.html { redirect_to @student, notice: 'Student was successfully updated.' }
-        format.json { render :show, status: :ok, location: @student }
+        format.html { redirect_to [@group, @student], notice: 'Student was successfully updated.' }
+        format.json { render :show, status: :ok, location: [@group, @student] }
       else
         format.html { render :edit }
         format.json { render json: @student.errors, status: :unprocessable_entity }
@@ -62,6 +66,13 @@ class StudentsController < ApplicationController
     end
   end
 
+  def delete_image
+    @image = @student.images.find(params[:image_id])
+    @image.purge
+    @group = Group.find(params[:group_id])
+    redirect_to [@group, @student]
+  end
+
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_student
@@ -70,6 +81,6 @@ class StudentsController < ApplicationController
 
     # Only allow a list of trusted parameters through.
     def student_params
-      params.require(:student).permit(:full_name)
+      params.require(:student).permit(:full_name, images: [])
     end
 end

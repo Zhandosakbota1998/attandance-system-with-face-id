@@ -51,6 +51,7 @@ class LessonsController < ApplicationController
   # PATCH/PUT /lessons/1
   # PATCH/PUT /lessons/1.json
   def update
+    @lesson.end_time = DateTime.now
     respond_to do |format|
       if @lesson.update(lesson_params)
         format.html { redirect_to group_subject_lesson_path(params[:group_id], params[:subject_id], @lesson), notice: 'Lesson was successfully updated.' }
@@ -86,6 +87,8 @@ class LessonsController < ApplicationController
 
     # Only allow a list of trusted parameters through.
     def lesson_params
-      params.require(:lesson).merge(subject_id: params[:subject_id]).permit(:name, :start_time, :end_time, :subject_id)
+      params.require(:lesson)
+        .merge(subject_id: params[:subject_id])
+        .permit(:name, :start_time, :end_time, :subject_id, student_ids: [])
     end
 end

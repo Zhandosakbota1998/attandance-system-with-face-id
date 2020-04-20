@@ -6,6 +6,11 @@
 </p>
 
 <p>
+  <strong>Students:</strong>
+  <%= @lesson.students.pluck(:full_name) %>
+</p>
+
+<p>
   <strong>Start time:</strong>
   <%= @lesson.start_time %>
 </p>
