@@ -10,7 +10,7 @@
     "bootstrap": "4.3.1",
     "canvas": "^2.6.1",
     "face-api.js": "^0.22.2",
-    "jquery": "^3.4.1",
+    "jquery": "^3.5.0",
     "popper.js": "^1.16.1",
     "stimulus": "^1.1.1",
     "turbolinks": "^5.2.0"
