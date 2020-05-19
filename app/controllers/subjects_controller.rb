@@ -17,11 +17,13 @@ class SubjectsController < ApplicationController
 
   # GET /subjects/new
   def new
+    @group = Group.find(params[:group_id])
     @subject = Subject.new(group_id: params[:group_id])
   end
 
   # GET /subjects/1/edit
   def edit
+    @group = Group.find(params[:group_id])
   end
 
   # POST /subjects
@@ -45,7 +47,7 @@ class SubjectsController < ApplicationController
   def update
     respond_to do |format|
       if @subject.update(subject_params)
-        format.html { redirect_to group_subjects_path, notice: 'Subject was successfully updated.' }
+        format.html { redirect_to group_subjects_path(params[:group_id]), notice: 'Subject was successfully updated.' }
         format.json { render :show, status: :ok, location: @subject }
       else
         format.html { render :edit }
@@ -60,7 +62,7 @@ class SubjectsController < ApplicationController
     @subject.lessons.destroy_all
     @subject.destroy
     respond_to do |format|
-      format.html { redirect_to group_subjects_path, notice: 'Subject was successfully destroyed.' }
+      format.html { redirect_to group_subjects_path(params[:group_id]), notice: 'Subject was successfully destroyed.' }
       format.json { head :no_content }
     end
   end
