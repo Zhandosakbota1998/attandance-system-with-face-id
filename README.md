@@ -1,24 +1,42 @@
-# README
+## Attendance System with Face ID
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+## Project Overview
 
-Things you may want to cover:
+This project is a facial recognition-based attendance system developed using Ruby. It leverages technologies such as Face IPJS, Tensorflow, Keras, Python, and OpenCV.
 
-* Ruby version
+## Features
 
-* System dependencies
+- **Facial Recognition:** Utilizes Face IPJS for advanced facial recognition capabilities.
+- **Machine Learning Integration:** Incorporates Tensorflow and Keras for machine learning aspects.
+- **Multilingual Support:** Combines the power of Ruby for core functionalities with Python for specific tasks involving OpenCV.
 
-* Configuration
+## How to Run
 
-* Database creation
+1. **Clone the Repository:**
+   ```bash
+   git clone https://github.com/Zhandosakbota1998/attendance-system-with-face-id.git
+   ```
 
-* Database initialization
+2. **Navigate to the Project Directory:**
+   ```bash
+   cd attendance-system-with-face-id
+   ```
 
-* How to run the test suite
+3. **Install Dependencies:**
+   ```bash
+   # Install required Ruby gems and Python packages
+   ```
 
-* Services (job queues, cache servers, search engines, etc.)
+4. **Run the Project:**
+   ```bash
+   # Execute the main Ruby script to initiate the attendance system
+   ```
 
-* Deployment instructions
+## Prerequisites
 
-* ...
+- Ensure that Ruby and the necessary gems are installed.
+- Install Python packages for Face IPJS, Tensorflow, Keras, and OpenCV.
+
+## License
+
+This project is licensed under the [MIT License](LICENSE). Refer to the license file for details.
