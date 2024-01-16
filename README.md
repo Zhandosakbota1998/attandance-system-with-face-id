@@ -36,7 +36,3 @@ This project is a facial recognition-based attendance system developed using Rub
 
 - Ensure that Ruby and the necessary gems are installed.
 - Install Python packages for Face IPJS, Tensorflow, Keras, and OpenCV.
-
-## License
-
-This project is licensed under the [MIT License](LICENSE). Refer to the license file for details.
